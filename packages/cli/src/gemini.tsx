@@ -224,9 +224,17 @@ export function checkMouseSupport(): boolean {
     return true;
   }
 
-  // Modern Windows environments (Windows Terminal, Conhost in Win 10+) support mouse
+  // Modern Windows environments
   if (process.platform === 'win32') {
-    return true;
+    // Windows Terminal
+    if (process.env['WT_SESSION']) {
+      return true;
+    }
+    // ConEmu (used by Cmder)
+    if (process.env['ConEmuPID']) {
+      return true;
+    }
+    return false;
   }
 
   return false;

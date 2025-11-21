@@ -559,11 +559,28 @@ describe('checkMouseSupport', () => {
     expect(checkMouseSupport()).toBe(true);
   });
 
-  it('should return true for Windows platform', async () => {
+  it('should return false for generic Windows platform without specific env vars', async () => {
     Object.defineProperty(process, 'platform', { value: 'win32' });
-    process.env['TERM'] = 'unknown'; // ensure TERM check doesn't pass
+    process.env['TERM'] = 'unknown';
+    delete process.env['TERM_PROGRAM'];
+    const { checkMouseSupport } = await import('./gemini.js');
+    expect(checkMouseSupport()).toBe(false);
+  });
+
+  it('should return true for Windows Terminal', async () => {
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    process.env['WT_SESSION'] = 'uuid';
     const { checkMouseSupport } = await import('./gemini.js');
     expect(checkMouseSupport()).toBe(true);
+    delete process.env['WT_SESSION'];
+  });
+
+  it('should return true for ConEmu (Cmder)', async () => {
+    Object.defineProperty(process, 'platform', { value: 'win32' });
+    process.env['ConEmuPID'] = '1234';
+    const { checkMouseSupport } = await import('./gemini.js');
+    expect(checkMouseSupport()).toBe(true);
+    delete process.env['ConEmuPID'];
   });
 
   it('should return false for unknown terminal', async () => {
