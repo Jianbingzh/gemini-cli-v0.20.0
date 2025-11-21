@@ -494,25 +494,22 @@ describe('validateDnsResolutionOrder', () => {
   });
 });
 
+vi.mock('./utils/detectMouse.js', () => ({
+  getMouseSupport: vi.fn(() => ({ mouse: true })),
+}));
+
 describe('checkMouseSupport', () => {
   let originalIsTTY: boolean | undefined;
-  let originalEnvTerm: string | undefined;
-  let originalEnvTermProgram: string | undefined;
   let originalEnvCI: string | undefined;
-  let originalPlatform: string;
 
   beforeEach(() => {
     originalIsTTY = process.stdout.isTTY;
-    originalEnvTerm = process.env['TERM'];
-    originalEnvTermProgram = process.env['TERM_PROGRAM'];
     originalEnvCI = process.env['CI'];
-    originalPlatform = process.platform;
 
     Object.defineProperty(process.stdout, 'isTTY', {
       value: true,
       configurable: true,
     });
-    // Clear CI for these tests unless specifically tested
     delete process.env['CI'];
   });
 
@@ -523,10 +520,8 @@ describe('checkMouseSupport', () => {
         configurable: true,
       });
     }
-    process.env['TERM'] = originalEnvTerm;
-    process.env['TERM_PROGRAM'] = originalEnvTermProgram;
     process.env['CI'] = originalEnvCI;
-    Object.defineProperty(process, 'platform', { value: originalPlatform });
+    vi.restoreAllMocks();
   });
 
   it('should return false if not TTY', async () => {
@@ -541,51 +536,22 @@ describe('checkMouseSupport', () => {
     expect(checkMouseSupport()).toBe(false);
   });
 
-  it('should return false for dumb terminal', async () => {
-    process.env['TERM'] = 'dumb';
-    const { checkMouseSupport } = await import('./gemini.js');
-    expect(checkMouseSupport()).toBe(false);
-  });
-
-  it('should return true for known good TERM_PROGRAM', async () => {
-    process.env['TERM_PROGRAM'] = 'vscode';
+  it('should return true if getMouseSupport says so', async () => {
     const { checkMouseSupport } = await import('./gemini.js');
     expect(checkMouseSupport()).toBe(true);
   });
 
-  it('should return true for known good TERM', async () => {
-    process.env['TERM'] = 'xterm-256color';
-    const { checkMouseSupport } = await import('./gemini.js');
-    expect(checkMouseSupport()).toBe(true);
-  });
-
-  it('should return false for generic Windows platform without specific env vars', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    process.env['TERM'] = 'unknown';
-    delete process.env['TERM_PROGRAM'];
-    const { checkMouseSupport } = await import('./gemini.js');
-    expect(checkMouseSupport()).toBe(false);
-  });
-
-  it('should return true for Windows Terminal', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    process.env['WT_SESSION'] = 'uuid';
-    const { checkMouseSupport } = await import('./gemini.js');
-    expect(checkMouseSupport()).toBe(true);
-    delete process.env['WT_SESSION'];
-  });
-
-  it('should return true for ConEmu (Cmder)', async () => {
-    Object.defineProperty(process, 'platform', { value: 'win32' });
-    process.env['ConEmuPID'] = '1234';
-    const { checkMouseSupport } = await import('./gemini.js');
-    expect(checkMouseSupport()).toBe(true);
-    delete process.env['ConEmuPID'];
-  });
-
-  it('should return false for unknown terminal', async () => {
-    process.env['TERM'] = 'unknown-term';
-    delete process.env['TERM_PROGRAM'];
+  it('should return false if getMouseSupport says no', async () => {
+    const { getMouseSupport } = await import('./utils/detectMouse.js');
+    vi.mocked(getMouseSupport).mockReturnValue({
+      mouse: false,
+      isTTY: true,
+      isSSH: false,
+      appId: 'unknown',
+      safe: false,
+      generic: 'unknown',
+      mouseProtocol: 'none',
+    });
     const { checkMouseSupport } = await import('./gemini.js');
     expect(checkMouseSupport()).toBe(false);
   });
@@ -642,19 +608,23 @@ describe('startInteractiveUI', () => {
 
   beforeEach(() => {
     originalIsTTY = process.stdout.isTTY;
+
     Object.defineProperty(process.stdout, 'isTTY', {
       value: true,
+
       configurable: true,
     });
-    // Ensure TERM supports mouse for tests expecting alternate buffer
-    process.env['TERM'] = 'xterm-256color';
+
     // Ensure CI doesn't disable mouse support
+
     delete process.env['CI'];
   });
+
   afterEach(() => {
     if (originalIsTTY !== undefined) {
       Object.defineProperty(process.stdout, 'isTTY', {
         value: originalIsTTY,
+
         configurable: true,
       });
     } else {
@@ -663,8 +633,7 @@ describe('startInteractiveUI', () => {
       // But usually isTTY is present on process.stdout.
       // Safest to just restore whatever value.
     }
-    // Clean up TERM env
-    delete process.env['TERM'];
+
     vi.restoreAllMocks();
   });
 

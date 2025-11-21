@@ -90,6 +90,8 @@ import { ScrollProvider } from './ui/contexts/ScrollProvider.js';
 import ansiEscapes from 'ansi-escapes';
 import { isAlternateBufferEnabled } from './ui/hooks/useAlternateBuffer.js';
 
+import { getMouseSupport } from './utils/detectMouse.js';
+
 import { profiler } from './ui/components/DebugProfiler.js';
 
 const SLOW_RENDER_MS = 200;
@@ -165,8 +167,7 @@ ${reason.stack}`
 }
 
 /**
- * Checks if the terminal supports mouse interactions using heuristics.
- * This avoids external dependencies by checking known environment variables.
+ * Checks if the terminal supports mouse interactions.
  */
 export function checkMouseSupport(): boolean {
   if (!process.stdout.isTTY) {
@@ -178,66 +179,8 @@ export function checkMouseSupport(): boolean {
     return false;
   }
 
-  const term = process.env['TERM'] || '';
-  const termProgram = process.env['TERM_PROGRAM'] || '';
-
-  // Known incompatible terminals
-  if (['dumb', 'cons25', 'emacs'].includes(term)) {
-    return false;
-  }
-
-  // Check TERM_PROGRAM for known modern terminals
-  const mouseSupportingPrograms = [
-    'Apple_Terminal',
-    'iTerm.app',
-    'vscode',
-    'WarpTerminal',
-    'Hyper',
-    'Alacritty',
-    'WezTerm',
-    'Ghostty',
-    'kitty',
-    'Terminus',
-    'FluentTerminal',
-  ];
-
-  if (mouseSupportingPrograms.some((prog) => termProgram.includes(prog))) {
-    return true;
-  }
-
-  // Check TERM patterns
-  // xterm, screen, tmux, rxvt, etc. usually support mouse
-  const mouseSupportingTerminals = [
-    /^xterm/,
-    /^screen/,
-    /^tmux/,
-    /^rxvt/,
-    /^vte/,
-    /^gnome/,
-    /^konsole/,
-    /^cygwin/,
-    /^alacritty/,
-    /^kitty/,
-  ];
-
-  if (mouseSupportingTerminals.some((regex) => regex.test(term))) {
-    return true;
-  }
-
-  // Modern Windows environments
-  if (process.platform === 'win32') {
-    // Windows Terminal
-    if (process.env['WT_SESSION']) {
-      return true;
-    }
-    // ConEmu (used by Cmder)
-    if (process.env['ConEmuPID']) {
-      return true;
-    }
-    return false;
-  }
-
-  return false;
+  const support = getMouseSupport();
+  return support.mouse;
 }
 
 export async function startInteractiveUI(
