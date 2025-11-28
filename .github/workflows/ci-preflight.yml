@@ -1,0 +1,64 @@
+name: CI Preflight Check
+
+# 触发工作流的事件
+on:
+  # 在推送到 main 分支时触发
+  push:
+    branches:
+      - main
+      - master
+  # 在发起或更新 Pull Request 时触发
+  pull_request:
+    branches:
+      - main
+      - master
+  # 允许在 GitHub Actions UI 中手动触发
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    # 使用最新的 Ubuntu 运行环境
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        # 检出代码到 Runner
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js 20
+        # 根据 package.json 中的 "engines": {"node": ">=20"} 设置 Node.js 环境
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm' # 启用 npm 缓存
+
+      - name: 📦 Install Dependencies
+        # 使用 npm ci 进行干净安装
+        run: npm ci
+
+      - name: 🔬 Run Preflight Script
+        # 执行预检查脚本，该脚本应包含 clean, install, format, lint, build, typecheck, test:ci 等步骤
+        # ❗ 假设您的根目录 package.json 中定义了 preflight 脚本来运行所有检查。
+        # 如果没有，您可能需要将其替换为所有子脚本的组合。
+        run: npm run preflight
+
+      - name: ⬆️ Upload Build Artifacts (packages/*/dist)
+        # 上传所有子包的构建结果
+        uses: actions/upload-artifact@v4
+        with:
+          name: preflight-build-artifacts-${{ github.sha }}
+          # 匹配所有 packages/ 目录下的子包的 dist/ 目录
+          path: |
+            packages/*/dist/
+          retention-days: 7 # 产物保留 7 天
+          
+      # 可选：如果您需要保存 vitest 运行后的测试覆盖率报告，可以添加以下步骤：
+      # - name: ⬆️ Upload Test Coverage Report
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: preflight-coverage-report-${{ github.sha }}
+      #     # 假设 vitest 报告输出到根目录或特定子包的 'coverage' 目录
+      #     path: |
+      #       coverage/
+      #       packages/*/coverage/
+      #     retention-days: 7
