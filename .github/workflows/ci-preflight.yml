@@ -38,7 +38,7 @@ jobs:
 
       - name: '🔬 Run Preflight Script'
         # 执行预检查脚本，该脚本应包含构建和测试
-        run: 'npm run preflight'
+        run: 'npm run build:all'
 
       - name: '⬆️ Upload Build Artifacts (packages/*/dist)'
         # 上传所有子包的构建结果
