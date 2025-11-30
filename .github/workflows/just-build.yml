@@ -26,9 +26,9 @@ jobs:
         # 使用 npm ci 进行干净安装
         run: 'npm ci'
 
-      - name: '🔬 Run Preflight Script'
+      - name: '🔬 Run build Script'
         # 执行预检查脚本，该脚本应包含构建和测试
-        run: 'npm run build:all'
+        run: 'npm run build'
 
       - name: '⬆️ Upload Build Artifacts (packages/*/dist)'
         # 上传所有子包的构建结果
