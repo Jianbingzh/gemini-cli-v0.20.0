@@ -1,22 +1,12 @@
-name: 'CI Preflight Check'
+name: 'just build'
 
 # 触发工作流的事件
 on:
-  # 在推送到 main/master 分支时触发
-  push:
-    branches:
-      - 'main'
-      - 'master'
-  # 在发起或更新 Pull Request 时触发
-  pull_request:
-    branches:
-      - 'main'
-      - 'master'
   # 允许在 GitHub Actions UI 中手动触发
   workflow_dispatch:
 
 jobs:
-  preflight:
+  building:
     # 使用最新的 Ubuntu 运行环境
     runs-on: 'ubuntu-latest'
 
