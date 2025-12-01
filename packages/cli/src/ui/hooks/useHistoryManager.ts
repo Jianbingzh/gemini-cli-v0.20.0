@@ -12,7 +12,6 @@ import type { ChatRecordingService } from '@google/gemini-cli-core/src/services/
 type HistoryItemUpdater = (
   prevItem: HistoryItem,
 ) => Partial<Omit<HistoryItem, 'id'>>;
-
 export interface UseHistoryManagerReturn {
   history: HistoryItem[];
   addItem: (
