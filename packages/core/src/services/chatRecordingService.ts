@@ -83,6 +83,7 @@ export type MessageRecord = BaseMessageRecord & ConversationRecordExtra;
 export interface ConversationRecord {
   sessionId: string;
   projectHash: string;
+  projectRoot: string;
   startTime: string;
   lastUpdated: string;
   messages: MessageRecord[];
@@ -112,6 +113,7 @@ export class ChatRecordingService {
   private cachedLastConvData: string | null = null;
   private sessionId: string;
   private projectHash: string;
+  private projectRoot: string;
   private queuedThoughts: Array<ThoughtSummary & { timestamp: string }> = [];
   private queuedTokens: TokensSummary | null = null;
   private config: Config;
@@ -120,6 +122,7 @@ export class ChatRecordingService {
     this.config = config;
     this.sessionId = config.getSessionId();
     this.projectHash = getProjectHash(config.getProjectRoot());
+    this.projectRoot = config.getProjectRoot();
   }
 
   /**
