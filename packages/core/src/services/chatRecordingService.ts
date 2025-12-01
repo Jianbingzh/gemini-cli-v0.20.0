@@ -83,7 +83,7 @@ export type MessageRecord = BaseMessageRecord & ConversationRecordExtra;
 export interface ConversationRecord {
   sessionId: string;
   projectHash: string;
-  projectRoot: string;
+  projectRoot?: string;
   startTime: string;
   lastUpdated: string;
   messages: MessageRecord[];
