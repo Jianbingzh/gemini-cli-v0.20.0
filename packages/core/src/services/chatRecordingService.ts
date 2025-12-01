@@ -164,6 +164,7 @@ export class ChatRecordingService {
         this.writeConversation({
           sessionId: this.sessionId,
           projectHash: this.projectHash,
+          projectRoot: this.projectRoot,
           startTime: new Date().toISOString(),
           lastUpdated: new Date().toISOString(),
           messages: [],
@@ -399,6 +400,7 @@ export class ChatRecordingService {
       return {
         sessionId: this.sessionId,
         projectHash: this.projectHash,
+        projectRoot: this.projectRoot,
         startTime: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         messages: [],
